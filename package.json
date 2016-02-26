@@ -6,7 +6,7 @@
   "scripts": {
     "api": "node server.js",
     "clean": "rimraf build",
-    "watch": "budo saga/index.js:build/bundle.js -p 9000 --dir ./ --verbose  --live -- -t babelify",
+    "watch": "budo src/index.js:build/bundle.js -p 9000 --dir ./ --verbose  --live -- -t babelify",
     "start": "npm-run-all -p watch api",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

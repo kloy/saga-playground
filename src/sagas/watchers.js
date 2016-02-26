@@ -9,7 +9,7 @@ export function* helloSaga() {
 }
 
 export function* watchInit() {
-  yield take('COUNTER_INIT');
+  yield take('APP_INITIALIZED');
   const response = yield call(read);
   const json = yield call(response.json.bind(response));
   yield put({ type: 'FETCHED', payload: json });

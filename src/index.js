@@ -32,3 +32,5 @@ render(
   <Root store={store} />,
   document.getElementById('root')
 );
+
+store.dispatch({ type: 'APP_INITIALIZED' });
