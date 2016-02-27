@@ -2,6 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import BlueCounter from './BlueCounter';
 import RedCounter from './RedCounter';
+import More from './More';
 import DevTools from './DevTools';
 
 
@@ -11,6 +12,7 @@ export default function Root({ store }) {
       <div>
         <BlueCounter />
         <RedCounter />
+        <More />
         <DevTools />
       </div>
     </Provider>
