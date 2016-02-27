@@ -1,34 +1,34 @@
 const initial = {
-  folderCount: 0,
-  tagCount: 0
+  blueCount: 0,
+  redCount: 0
 };
 
 export default function reducer(state = initial, action) {
   switch (action.type) {
-    case 'ADD_TAG':
+    case 'ADD_RED':
       return {
         ...state,
-        tagCount: state.tagCount + 1
+        redCount: state.redCount + 1
       };
-    case 'REMOVE_TAG':
+    case 'REMOVE_RED':
       return {
         ...state,
-        tagCount: state.tagCount - 1
+        redCount: state.redCount - 1
       };
-    case 'ADD_FOLDER':
+    case 'ADD_BLUE':
       return {
         ...state,
-        folderCount: state.folderCount + 1
+        blueCount: state.blueCount + 1
       };
-    case 'REMOVE_FOLDER':
+    case 'REMOVE_BLUE':
       return {
         ...state,
-        folderCount: state.folderCount - 1
+        blueCount: state.blueCount - 1
       };
     case 'FETCHED':
       return {
-        folderCount: action.payload.folderCount,
-        tagCount: action.payload.tagCount
+        blueCount: action.payload.blueCount,
+        redCount: action.payload.redCount
       };
     default:
       return state;

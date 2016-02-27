@@ -9,18 +9,17 @@ function delay(time = 0) {
 }
 
 function calculateChangeset(queue) {
-  const lastFolderUpdate = last(queue.filter(({ type }) => type === 'folder'));
-  const lastTagUpdate = last(queue.filter(({ type }) => type === 'tag'));
+  const lastBlueUpdate = last(queue.filter(({ type }) => type === 'blue'));
+  const lastRedUpdate = last(queue.filter(({ type }) => type === 'red'));
   const params = {};
 
-  if (!isUndefined(lastFolderUpdate)) {
-    params.folderCount = lastFolderUpdate.count;
+  if (!isUndefined(lastBlueUpdate)) {
+    params.blueCount = lastBlueUpdate.count;
   }
 
-  if (!isUndefined(lastTagUpdate)) {
-    params.tagCount = lastTagUpdate.count;
+  if (!isUndefined(lastRedUpdate)) {
+    params.redCount = lastRedUpdate.count;
   }
-
 
   return params;
 }
@@ -28,7 +27,7 @@ function calculateChangeset(queue) {
 export function* sendShipment(queue) {
   try {
     // delays
-    yield call(delay, 5000);
+    yield call(delay, 1000);
 
     // request
     const params = calculateChangeset(queue);

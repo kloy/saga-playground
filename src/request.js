@@ -11,15 +11,15 @@ export function read() {
   });
 }
 
-export function update({ tagCount, folderCount }) {
+export function update({ redCount, blueCount }) {
   const body = {};
 
-  if (tagCount !== null) {
-    body.tagCount = tagCount;
+  if (redCount !== null) {
+    body.redCount = redCount;
   }
 
-  if (folderCount !== null) {
-    body.folderCount = folderCount;
+  if (blueCount !== null) {
+    body.blueCount = blueCount;
   }
 
   return fetch(`//${host}/boxcar`, {

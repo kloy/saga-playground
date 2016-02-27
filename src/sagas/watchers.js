@@ -17,12 +17,31 @@ export function* watchInit() {
 
 function takeBatch() {
   return {
-    addTag: take('ADD_TAG'),
-    removeTag: take('REMOVE_TAG'),
-    addFolder: take('ADD_FOLDER'),
-    removeFolder: take('REMOVE_FOLDER'),
+    addRed: take('ADD_RED'),
+    removeRed: take('REMOVE_RED'),
+    addBlue: take('ADD_BLUE'),
+    removeBlue: take('REMOVE_BLUE'),
     shipped: take('SHIPPED')
   };
+}
+
+function makeQueueItem(type, state) {
+  switch (type) {
+    case 'addRed':
+    case 'removeRed':
+      return {
+        type: 'red',
+        count: state.redCount
+      };
+    case 'addBlue':
+    case 'removeBlue':
+      return {
+        type: 'blue',
+        count: state.blueCount
+      };
+    default:
+      return { type: 'unknown' };
+  }
 }
 
 export function* watchChanges(getState) {
@@ -36,34 +55,16 @@ export function* watchChanges(getState) {
     if (key === 'shipped') {
       queue = [];
       shippingSaga = null;
-      break;
+    } else {
+      const state = getState();
+      const item = makeQueueItem(key, state);
+      queue.push(item);
+
+      if (shippingSaga) {
+        yield cancel(shippingSaga);
+      }
+
+      shippingSaga = yield fork(sendShipment, queue);
     }
-
-    if (shippingSaga !== null) {
-      yield cancel(shippingSaga);
-    }
-
-    const state = getState();
-
-    switch (key) {
-      case 'addTag':
-      case 'removeTag':
-        queue.push({
-          type: 'tag',
-          count: state.tagCount
-        });
-        break;
-      case 'addFolder':
-      case 'removeFolder':
-        queue.push({
-          type: 'folder',
-          count: state.folderCount
-        });
-        break;
-      default:
-        break;
-    }
-
-    shippingSaga = yield fork(sendShipment, queue);
   }
 }
