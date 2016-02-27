@@ -4,6 +4,8 @@ import { SagaCancellationException } from 'redux-saga';
 import { call, put, take, race } from 'redux-saga/effects';
 
 
+const DELAY = 10000; // 10 seconds
+
 function onBeforeUnload(fn) {
   window.onbeforeunload = function handleEvent(__event) {
     fn();
@@ -34,11 +36,11 @@ function buildParams(batch) {
   const params = {};
 
   if (batch.hasOwnProperty('blue')) {
-    params.blueCount = batch.blue.count;
+    params.blueCount = batch.blue;
   }
 
   if (batch.hasOwnProperty('red')) {
-    params.redCount = batch.red.count;
+    params.redCount = batch.red;
   }
 
   return params;
@@ -51,21 +53,25 @@ export function* sendShipment(batch) {
     // delays
     onBeforeUnload(partial(update, params));
     yield race({
-      delay: call(delay, 10000),
+      delay: call(delay, DELAY),
       forceSync: take('FORCE_SYNC')
     });
 
     // request
-    yield call(update, params);
+    const response = yield call(update, params);
     removeBeforeUnload();
 
     // complete
-    yield put({
-      type: 'SHIPPED',
-      payload: {
-        batch
-      }
-    });
+    if (response.status === 200) {
+      yield put({
+        type: 'SHIPPED',
+        payload: {
+          batch
+        }
+      });
+    } else {
+      yield put({ type: 'FAILED' });
+    }
   } catch (error) {
     if (error instanceof SagaCancellationException) {
       removeBeforeUnload();

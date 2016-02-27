@@ -33,7 +33,27 @@ app.post('/boxcar', (req, res) => {
     blueCount = req.body.blueCount;
   }
 
-  const body = {
+  let body;
+
+  if (blueCount === 5) {
+    body = {
+      status: 500,
+      resource: 'POST /boxcar',
+      time: Date.now(),
+      request_blueCount: req.body.blueCount,
+      request_redCount: req.body.redCount,
+      redCount,
+      blueCount,
+      message: 'forcing failure to demonstrate notification'
+    };
+
+    console.log(body);
+    res.status(500).json(body);
+    return;
+  }
+
+  body = {
+    status: 200,
     resource: 'POST /boxcar',
     time: Date.now(),
     request_blueCount: req.body.blueCount,
@@ -43,7 +63,6 @@ app.post('/boxcar', (req, res) => {
   };
 
   console.log(body);
-
   res.json(body);
 });
 
