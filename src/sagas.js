@@ -1,8 +1,25 @@
-import { values, pick } from 'lodash';
-import { sendShipment } from './boxcar';
-import { take, call, put, race, fork, cancel } from 'redux-saga/effects';
-import { read } from '../request';
+import { partial, pick, values } from 'lodash';
+import { SagaCancellationException } from 'redux-saga';
+import { call, cancel, fork, put, take, race } from 'redux-saga/effects';
+import { delay, onBeforeUnload, removeBeforeUnload } from './utils';
+import { read, update } from './request';
 
+
+const DELAY = 10000; // 10 seconds
+
+function buildParams(batch) {
+  const params = {};
+
+  if (batch.hasOwnProperty('blue')) {
+    params.blueCount = batch.blue;
+  }
+
+  if (batch.hasOwnProperty('red')) {
+    params.redCount = batch.red;
+  }
+
+  return params;
+}
 
 function buildItem(action, state) {
   switch (action.type) {
@@ -32,18 +49,48 @@ function takeChange() {
   };
 }
 
-export function* helloSaga() {
-  console.log('Hello Sagas!');
-}
-
-export function* watchInit() {
-  yield take('APP_INITIALIZED');
+export function* loadData() {
   const response = yield call(read);
   const json = yield call(response.json.bind(response));
   yield put({ type: 'FETCHED', payload: json });
 }
 
-export function* watchShipped(getState) {
+export function* sendShipment(batch) {
+  try {
+    const params = buildParams(batch);
+
+    // delays
+    onBeforeUnload(partial(update, params));
+    yield race({
+      delay: call(delay, DELAY),
+      forceSync: take('FORCE_SYNC')
+    });
+
+    // request
+    const response = yield call(update, params);
+    removeBeforeUnload();
+
+    // complete
+    if (response.status === 200) {
+      yield put({
+        type: 'SHIPPED',
+        payload: {
+          batch
+        }
+      });
+    } else {
+      yield put({ type: 'FAILED' });
+    }
+  } catch (error) {
+    if (error instanceof SagaCancellationException) {
+      removeBeforeUnload();
+    } else {
+      throw error;
+    }
+  }
+}
+
+export function* watchForShipped(getState) {
   let previousState = getState();
   while (true) {
     const { shipped, failed, fetched } = yield race({
@@ -65,7 +112,7 @@ export function* watchShipped(getState) {
   }
 }
 
-export function* watchShippingRequests() {
+export function* watchForShippingRequests() {
   let shippingSaga = null;
   let batch = {};
 
@@ -91,7 +138,7 @@ export function* watchShippingRequests() {
   }
 }
 
-export function* watchChanges(getState) {
+export function* watchForChanges(getState) {
   while (true) {
     const results = yield race(takeChange());
 
@@ -100,4 +147,12 @@ export function* watchChanges(getState) {
     const payload = buildItem(action, state);
     yield put({ type: 'SHIPPING_REQUEST', payload });
   }
+}
+
+export default function* root(getState) {
+  yield [
+    fork(watchForChanges, getState),
+    fork(watchForShippingRequests),
+    fork(watchForShipped, getState)
+  ];
 }

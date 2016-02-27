@@ -1,24 +1,21 @@
 import 'babel-polyfill';
 import 'whatwg-fetch';
-import { values } from 'lodash';
 import React from 'react';
 import { render } from 'react-dom';
-import {
-  createStore,
-  applyMiddleware,
-  compose
-} from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import createSagaMiddleware from 'redux-saga';
+import createSagaDispatcher from './sagaDispatcher';
 import reducer from './reducer';
 import Root from './Root';
 import DevTools from './DevTools';
-import * as sagas from './sagas/watchers';
+import rootSaga, { loadData } from './sagas';
 
 
-const sagaMiddleware = createSagaMiddleware(...values(sagas));
+const sagaMiddleware = createSagaMiddleware(rootSaga);
+const sagaDispatcher = createSagaDispatcher(sagaMiddleware);
 
 const enhancer = compose(
-  applyMiddleware(sagaMiddleware),
+  applyMiddleware(sagaMiddleware, sagaDispatcher),
   DevTools.instrument()
 );
 
@@ -33,4 +30,4 @@ render(
   document.getElementById('root')
 );
 
-store.dispatch({ type: 'APP_INITIALIZED' });
+store.dispatch(loadData);
