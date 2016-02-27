@@ -15,7 +15,7 @@ export function* watchInit() {
   yield put({ type: 'FETCHED', payload: json });
 }
 
-function takeBatch() {
+function takeChange() {
   return {
     addRed: take('ADD_RED'),
     removeRed: take('REMOVE_RED'),
@@ -25,16 +25,16 @@ function takeBatch() {
   };
 }
 
-function makeQueueItem(type, state) {
-  switch (type) {
-    case 'addRed':
-    case 'removeRed':
+function buildItem(action, state) {
+  switch (action.type) {
+    case 'ADD_RED':
+    case 'REMOVE_RED':
       return {
         type: 'red',
         count: state.redCount
       };
-    case 'addBlue':
-    case 'removeBlue':
+    case 'ADD_BLUE':
+    case 'REMOVE_BLUE':
       return {
         type: 'blue',
         count: state.blueCount
@@ -45,26 +45,27 @@ function makeQueueItem(type, state) {
 }
 
 export function* watchChanges(getState) {
-  let queue = [];
+  let batch = {};
   let shippingSaga = null;
 
   while (true) {
-    const results = yield race(takeBatch());
+    const results = yield race(takeChange());
     const key = keys(results)[0]; // will get the property name since only one prop can exist
+    const action = results[key];
 
-    if (key === 'shipped') {
-      queue = [];
+    if (action.type === 'SHIPPED') {
+      batch = {};
       shippingSaga = null;
     } else {
       const state = getState();
-      const item = makeQueueItem(key, state);
-      queue.push(item);
+      const item = buildItem(action, state);
+      batch[item.type] = item;
 
       if (shippingSaga) {
         yield cancel(shippingSaga);
       }
 
-      shippingSaga = yield fork(sendShipment, queue);
+      shippingSaga = yield fork(sendShipment, batch);
     }
   }
 }

@@ -1,4 +1,3 @@
-import { last, isUndefined } from 'lodash';
 import { update } from '../request';
 import { SagaCancellationException } from 'redux-saga';
 import { call, put } from 'redux-saga/effects';
@@ -8,36 +7,34 @@ function delay(time = 0) {
   return new Promise(resolve => setTimeout(resolve, time));
 }
 
-function calculateChangeset(queue) {
-  const lastBlueUpdate = last(queue.filter(({ type }) => type === 'blue'));
-  const lastRedUpdate = last(queue.filter(({ type }) => type === 'red'));
+function buildParams(batch) {
   const params = {};
 
-  if (!isUndefined(lastBlueUpdate)) {
-    params.blueCount = lastBlueUpdate.count;
+  if (batch.hasOwnProperty('blue')) {
+    params.blueCount = batch.blue.count;
   }
 
-  if (!isUndefined(lastRedUpdate)) {
-    params.redCount = lastRedUpdate.count;
+  if (batch.hasOwnProperty('red')) {
+    params.redCount = batch.red.count;
   }
 
   return params;
 }
 
-export function* sendShipment(queue) {
+export function* sendShipment(batch) {
   try {
     // delays
     yield call(delay, 1000);
 
     // request
-    const params = calculateChangeset(queue);
+    const params = buildParams(batch);
     yield call(update, params);
 
     // complete
     yield put({
       type: 'SHIPPED',
       payload: {
-        items: queue
+        batch
       }
     });
   } catch (error) {
